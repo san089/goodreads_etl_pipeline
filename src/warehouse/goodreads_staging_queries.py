@@ -1,12 +1,27 @@
-create_staging_schema = "CREATE SCHEMA IF NOT EXISTS goodreads_staging;"
+import configparser
+from pathlib import Path
 
-drop_authors_table = "DROP TABLE IF EXISTS goodreads_staging.authors;"
-drop_reviews_table = "DROP TABLE IF EXISTS goodreads_staging.reviews;"
-drop_books_table = "DROP TABLE IF EXISTS goodreads_staging.books;"
-drop_users_table = "DROP TABLE IF EXISTS goodreads_staging.users;"
+config = configparser.ConfigParser()
+config.read_file(open(f"{Path(__file__).parents[0]}/warehouse_config.cfg"))
+
+# Setup configs
+staging_schema = config.get('STAGING', 'SCHEMA')
+s3_processed_zone = 's3://' + config.get('BUCKET', 'PROCESSED_ZONE')
+iam_role = config.get('IAM_ROLE', 'ARN')
+
+# Setup Staging Schema
+create_staging_schema = "CREATE SCHEMA IF NOT EXISTS {};".format(staging_schema)
+
+# Setup Drop table queries
+drop_authors_table = "DROP TABLE IF EXISTS {}.authors;".format(staging_schema)
+drop_reviews_table = "DROP TABLE IF EXISTS {}.reviews;".format(staging_schema)
+drop_books_table = "DROP TABLE IF EXISTS {}.books;".format(staging_schema)
+drop_users_table = "DROP TABLE IF EXISTS {}.users;".format(staging_schema)
+
+
 
 create_authors_table = """
-CREATE TABLE IF NOT EXISTS goodreads_staging.authors
+CREATE TABLE IF NOT EXISTS {}.authors
 (
     author_id BIGINT PRIMARY KEY,
     name VARCHAR,
@@ -19,10 +34,11 @@ CREATE TABLE IF NOT EXISTS goodreads_staging.authors
 )
 DISTSTYLE ALL
 ;
-"""
+""".format(staging_schema)
+
 
 create_reviews_table = """
-CREATE TABLE IF NOT EXISTS goodreads_staging.reviews
+CREATE TABLE IF NOT EXISTS {}.reviews
 (
     review_id BIGINT PRIMARY KEY ,
     user_id BIGINT,
@@ -42,10 +58,10 @@ CREATE TABLE IF NOT EXISTS goodreads_staging.reviews
 )
 DISTSTYLE ALL
 ;
-"""
+""".format(staging_schema)
 
 create_books_table = """
-CREATE TABLE IF NOT EXISTS goodreads_staging.books
+CREATE TABLE IF NOT EXISTS {}.books
 (
     book_id BIGINT PRIMARY KEY ,
     title VARCHAR,
@@ -68,10 +84,10 @@ CREATE TABLE IF NOT EXISTS goodreads_staging.books
 )
 DISTSTYLE ALL
 ;
-"""
+""".format(staging_schema)
 
 create_users_table = """
-CREATE TABLE IF NOT EXISTS goodreads_staging.users
+CREATE TABLE IF NOT EXISTS {}.users
 (
     user_id BIGINT PRIMARY KEY ,
     user_name VARCHAR,
@@ -86,57 +102,60 @@ CREATE TABLE IF NOT EXISTS goodreads_staging.users
 )
 DISTSTYLE ALL
 ;
-"""
+""".format(staging_schema)
 
 copy_authors_table = """
-COPY goodreads_staging.authors
-FROM 's3://goodread-processed-zone/authors'
-IAM_ROLE 'arn:aws:iam::355886286429:role/Redshift_IAM_ROLE'
+COPY {0}.authors
+FROM '{1}/authors'
+IAM_ROLE '{2}'
 CSV
 DELIMITER '|'
 GZIP
-NULL AS  '\000'
+NULL AS  '\\000'
 IGNOREHEADER 1
 ;
-"""
+""".format(staging_schema, s3_processed_zone, iam_role)
 
 
 copy_reviews_table = """
-COPY goodreads_staging.reviews
-FROM 's3://goodread-processed-zone/reviews'
-IAM_ROLE 'arn:aws:iam::355886286429:role/Redshift_IAM_ROLE'
+COPY {0}.reviews
+FROM '{1}/reviews'
+IAM_ROLE '{2}'
 CSV
 DELIMITER '|'
 GZIP
-NULL AS  '\000'
+NULL AS  '\\000'
 IGNOREHEADER 1
 ;
-"""
+""".format(staging_schema, s3_processed_zone, iam_role)
+
 
 copy_books_table = """
-COPY goodreads_staging.books
-FROM 's3://goodread-processed-zone/books'
-IAM_ROLE 'arn:aws:iam::355886286429:role/Redshift_IAM_ROLE'
+COPY {0}.books
+FROM '{1}/books'
+IAM_ROLE '{2}'
 CSV
 DELIMITER '|'
 GZIP
-NULL AS '\000'
+NULL AS  '\\000'
 IGNOREHEADER 1
 ;
-"""
+""".format(staging_schema, s3_processed_zone, iam_role)
+
 
 
 copy_users_table = """
-COPY goodreads_staging.users
-FROM 's3://goodread-processed-zone/users'
-IAM_ROLE 'arn:aws:iam::355886286429:role/Redshift_IAM_ROLE'
+COPY {0}.users
+FROM '{1}/users'
+IAM_ROLE '{2}'
 CSV
 DELIMITER '|'
 GZIP
-NULL AS '\000'
+NULL AS  '\\000'
 IGNOREHEADER 1
 ;
-"""
+""".format(staging_schema, s3_processed_zone, iam_role)
+
 
 drop_staging_tables = [drop_authors_table, drop_reviews_table, drop_books_table, drop_users_table]
 create_staging_tables = [create_authors_table, create_reviews_table, create_books_table, create_users_table]

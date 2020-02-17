@@ -1,17 +1,27 @@
 from pyspark.sql.types import StringType
 from pyspark.sql import functions as fn
 import goodreads_udf
+import logging
+import configparser
+from pathlib import Path
 
+logger = logging.getLogger(__name__)
+
+config = configparser.ConfigParser()
+config.read_file(open(f"{Path(__file__).parents[0]}/config.cfg"))
 
 class GoodreadsTransform:
 
     def __init__(self, spark):
         self._spark = spark
+        self._load_path = 's3://' + config.get('BUCKET', 'WORKING_ZONE')
+        self._save_path = 's3://' + config.get('BUCKET', 'PROCESSED_ZONE')
 
 
     def transform_author_dataset(self):
+        logging.debug("Inside transform author dataset module")
         author_df = \
-            self._spark.read.csv('s3://goodreads-working-zone/author.csv', header=True, mode='PERMISSIVE',inferSchema=True)
+            self._spark.read.csv( self._load_path + '/author.csv', header=True, mode='PERMISSIVE',inferSchema=True)
 
         author_lookup_df = author_df.groupBy('author_id')\
                             .agg(fn.max('record_create_timestamp').alias('record_create_timestamp'))
@@ -23,14 +33,18 @@ class GoodreadsTransform:
                             .select(author_df.columns) \
                             .withColumn('name', goodreads_udf.remove_extra_spaces('name'))
 
-        deduped_author_df.coalesce(3).write.csv(path='s3://goodreads-processed-zone/author/', mode='overwrite', \
-                                                compression='gzip', header=True)
+        logging.debug(f"Attempting to write data to {self._save_path + '/authors/'}")
+        deduped_author_df\
+            .coalesce(3)\
+            .write\
+            .csv(path = self._save_path + '/authors/', sep = '|', mode='overwrite', compression='gzip', header=True, timestampFormat = 'yyyy-MM-dd HH:mm:ss.SSS', quote = '"', escape = '"')
 
 
 
     def transform_reviews_dataset(self):
+        logging.debug("Inside transform reviews dataset module")
         reviews_df = self._spark.read \
-                    .csv('s3://goodreads-working-zone/reviews.csv', header=True, \
+                    .csv(self._load_path + '/reviews.csv', header=True, \
                             mode = 'PERMISSIVE', inferSchema=True, quote = "\"", escape = "\"")
 
         reviews_lookup_df = reviews_df\
@@ -48,12 +62,17 @@ class GoodreadsTransform:
             .withColumn('review_added_date', goodreads_udf.stringtodatetime('review_added_date')) \
             .withColumn('review_updated_date', goodreads_udf.stringtodatetime('review_updated_date'))
 
-        deduped_reviews_df.coalesce(10).write.csv(path='s3://goodreads-processed-zone/reviews/', mode='overwrite',
-                                                  compression='gzip', header=True)
+
+        logging.debug(f"Attempting to write data to {self._save_path + '/reviews/'}")
+        deduped_reviews_df\
+            .coalesce(3)\
+            .write\
+            .csv(path = self._save_path + '/reviews/', sep = '|', mode='overwrite', compression='gzip', header=True, timestampFormat = 'yyyy-MM-dd HH:mm:ss.SSS', quote = '"', escape = '"')
 
 
     def transform_books_dataset(self):
-        books_df = self._spark.read.csv('s3://goodreads-working-zone/book.csv', header=True, mode='PERMISSIVE',
+        logging.debug("Inside transform books dataset module")
+        books_df = self._spark.read.csv(self._load_path + '/book.csv', header=True, mode='PERMISSIVE',
                                   inferSchema=True, quote="\"", escape="\"")
 
         books_lookup_df = books_df\
@@ -65,11 +84,16 @@ class GoodreadsTransform:
         deduped_books_df = books_df\
                            .join(books_lookup_df, ['book_id', 'record_create_timestamp'], how='inner')\
                            .select(books_df.columns)
-        deduped_books_df.coalesce(10).write.csv(path='s3://goodreads-processed-zone/books/', mode='overwrite', \
-                                                compression='gzip', header=True)
+
+        logging.debug(f"Attempting to write data to {self._save_path + '/books/'}")
+        deduped_books_df\
+            .coalesce(3)\
+            .write\
+            .csv(path = self._save_path + '/books/', sep = '|', mode='overwrite', compression='gzip', header=True, timestampFormat = 'yyyy-MM-dd HH:mm:ss.SSS', quote = '"', escape = '"')
 
 
     def tranform_users_dataset(self):
+        logging.debug("Inside transform users dataset module")
         users_df = self._spark.read.csv('s3://goodreads-working-zone/user.csv', header=True, mode='PERMISSIVE',
                                   inferSchema=True, quote="\"", escape="\"")
 
@@ -84,5 +108,8 @@ class GoodreadsTransform:
                            .join(users_lookup_df, ['user_id', 'record_create_timestamp'], how='inner')\
                            .select(users_df.columns)
 
-        deduped_users_df.coalesce(3).write.csv(path='s3://goodreads-processed-zone/users/', mode='overwrite',
-                                               compression='gzip', header=True)
+        logging.debug(f"Attempting to write data to {self._save_path + '/users/'}")
+        deduped_users_df\
+            .coalesce(3)\
+            .write\
+            .csv(path = self._save_path + '/users/', sep = '|', mode='overwrite', compression='gzip', header=True, timestampFormat = 'yyyy-MM-dd HH:mm:ss.SSS', quote = '"', escape = '"')

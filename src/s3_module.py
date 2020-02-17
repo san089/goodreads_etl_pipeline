@@ -1,11 +1,12 @@
 import boto3
 import configparser
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 config = configparser.ConfigParser()
-config.read_file(open('config.cfg'))
+config.read_file(open(f"{Path(__file__).parents[0]}/config.cfg"))
 
 class GoodReadsS3Module:
 
@@ -18,25 +19,29 @@ class GoodReadsS3Module:
         self._processed_zone = config.get('BUCKET','PROCESSED_ZONE')
 
     def s3_move_data(self, source_bucket = None, target_bucket= None):
-
         if source_bucket is None:
             source_bucket = self._landing_zone
         if target_bucket is None:
             target_bucket = self._working_zone
 
+        logging.debug(f"Inside s3_move_data : Source bucket set is : {source_bucket}\n Target bucket set is : {target_bucket}")
+
         # cleanup target bucket
         self.clean_bucket(target_bucket)
 
         # Move files to working zone
-        for key in self.check_files_exists(source_bucket):
+        for key in self.get_files(source_bucket):
             if key in config.get('FILES','NAME').split(","):
+                logging.debug(f"Copying file {key} from {source_bucket} to {target_bucket}")
                 self._s3.meta.client.copy({'Bucket': source_bucket, 'Key': key}, target_bucket, key)
 
         # cleanup source bucket
         self.clean_bucket(source_bucket)
 
-    def check_files_exists(self, bucket_name):
+    def get_files(self, bucket_name):
+        logging.debug(f"Inspecting bucket : {bucket_name} for files present")
         return [bucket_object.key for bucket_object in self._s3.Bucket(bucket_name).objects.all()]
 
     def clean_bucket(self, bucket_name):
+        logging.debug(f"Cleaning bucket : {bucket_name}")
         self._s3.Bucket(bucket_name).objects.all().delete()

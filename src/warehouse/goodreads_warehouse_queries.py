@@ -1,12 +1,20 @@
-create_warehouse_schema = "CREATE SCHEMA IF NOT EXISTS goodreads_warehouse;"
+import configparser
+from pathlib import Path
 
-drop_authors_table = "DROP TABLE IF EXISTS goodreads_warehouse.authors;"
-drop_reviews_table = "DROP TABLE IF EXISTS goodreads_warehouse.reviews;"
-drop_books_table = "DROP TABLE IF EXISTS goodreads_warehouse.books;"
-drop_users_table = "DROP TABLE IF EXISTS goodreads_warehouse.users;"
+config = configparser.ConfigParser()
+config.read_file(open(f"{Path(__file__).parents[0]}/warehouse_config.cfg"))
+
+warehouse_schema = config.get('WAREHOUSE', 'SCHEMA')
+
+create_warehouse_schema = "CREATE SCHEMA IF NOT EXISTS {};".format(warehouse_schema)
+
+drop_authors_table = "DROP TABLE IF EXISTS {}.authors;".format(warehouse_schema)
+drop_reviews_table = "DROP TABLE IF EXISTS .reviews;".format(warehouse_schema)
+drop_books_table = "DROP TABLE IF EXISTS {}.books;".format(warehouse_schema)
+drop_users_table = "DROP TABLE IF EXISTS {}.users;".format(warehouse_schema)
 
 create_authors_table = """
-CREATE TABLE IF NOT EXISTS goodreads_warehouse.authors
+CREATE TABLE IF NOT EXISTS {}.authors
 (
     author_id BIGINT PRIMARY KEY DISTKEY,
     name VARCHAR,
@@ -19,10 +27,10 @@ CREATE TABLE IF NOT EXISTS goodreads_warehouse.authors
 )
 DISTSTYLE KEY
 ;
-"""
+""".format(warehouse_schema)
 
 create_reviews_table = """
-CREATE TABLE IF NOT EXISTS goodreads_warehouse.reviews
+CREATE TABLE IF NOT EXISTS {}.reviews
 (
     review_id BIGINT PRIMARY KEY ,
     user_id BIGINT,
@@ -42,10 +50,10 @@ CREATE TABLE IF NOT EXISTS goodreads_warehouse.reviews
 )
 DISTSTYLE KEY
 ;
-"""
+""".format(warehouse_schema)
 
 create_books_table = """
-CREATE TABLE IF NOT EXISTS goodreads_warehouse.books
+CREATE TABLE IF NOT EXISTS {}.books
 (
     book_id BIGINT PRIMARY KEY ,
     title VARCHAR,
@@ -68,10 +76,10 @@ CREATE TABLE IF NOT EXISTS goodreads_warehouse.books
 )
 DISTSTYLE EVEN
 ;
-"""
+""".format(warehouse_schema)
 
 create_users_table = """
-CREATE TABLE IF NOT EXISTS goodreads_warehouse.users
+CREATE TABLE IF NOT EXISTS {}.users
 (
     user_id BIGINT PRIMARY KEY ,
     user_name VARCHAR,
@@ -86,7 +94,7 @@ CREATE TABLE IF NOT EXISTS goodreads_warehouse.users
 )
 DISTSTYLE EVEN
 ;
-"""
+""".format(warehouse_schema)
 
 
 drop_warehouse_tables = [drop_authors_table, drop_reviews_table, drop_books_table, drop_users_table]

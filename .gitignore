@@ -1,0 +1,9 @@
+#Ignore Config Files
+src/config.cfg
+src/warehouse/warehouse_config.cfg
+
+#Ignore Idea Files
+.idea/
+
+#Ignore Cache Files
+src/warehouse/__pycache__/

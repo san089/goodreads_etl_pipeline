@@ -1,14 +1,15 @@
 import configparser
 import logging
 import psycopg2
-from goodreads_staging_queries import create_staging_schema, drop_staging_tables, create_staging_tables, copy_staging_tables
-from goodreads_warehouse_queries import create_warehouse_schema, drop_warehouse_tables, create_warehouse_tables
-from goodreads_upsert import upsert_queries
+from .goodreads_staging_queries import create_staging_schema, drop_staging_tables, create_staging_tables, copy_staging_tables
+from .goodreads_warehouse_queries import create_warehouse_schema, drop_warehouse_tables, create_warehouse_tables
+from .goodreads_upsert import upsert_queries
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 config = configparser.ConfigParser()
-config.read_file(open('warehouse_config.cfg'))
+config.read_file(open(f"{Path(__file__).parents[0]}/warehouse_config.cfg"))
 
 class GoodReadsWarehouseDriver:
 

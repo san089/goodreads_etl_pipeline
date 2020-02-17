@@ -1,0 +1,53 @@
+pip-3.6 install boto3 --user
+
+sudo pip install -U \
+  awscli            \
+  boto              \
+  ciso8601          \
+  ujson             \
+  workalendar
+
+                                                                                                    
+export PYSPARK_DRIVER_PYTHON=python3
+export PYSPARK_PYTHON=python3
+
+
+# Make all the objects of the bucket public 		
+{
+    "Id": "...",
+    "Statement": [ {
+        "Sid": "...",
+        "Action": [
+            "s3:GetObject"
+        ],
+        "Effect": "Allow",
+        "Resource": "arn:aws:s3:::bucket/*",
+        "Principal": {
+            "AWS": [ "*" ]
+        }
+    } ]
+}  
+
+
+# If Redshift not able to access s3 public buckets, try Enabling Enhanced VPC routing
+Go to Redshift cluster -> Network and security -> EnhancedVPC routing -> Enable it.
+  
+  
+# Installing psycopg2 
+
+First need to install : postgresql-libs, postgresql-devel
+Both are dependency for psycopg2
+
+sudo yum install postgresql-libs
+sudo yum install postgresql-devel
+
+Then run :
+sudo pip install psycopg2
+or try
+sudo pip-3.6 install psycopg2
+
+
+
+
+
+

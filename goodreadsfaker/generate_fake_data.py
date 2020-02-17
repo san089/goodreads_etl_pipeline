@@ -4,11 +4,12 @@ from collections import OrderedDict
 from datetime import datetime
 import os
 import csv
+import argparse
 
 class GoodreadsFake:
 
     def __init__(self):
-        self._faker = Faker(['it_IT', 'en_US', 'ja_JP', 'hi_IN'])
+        self._faker = Faker(['it_IT', 'en_US', 'hi_IN', 'ja_JP'])
         self._fake_books = ["Vacation People","Enter the Aardvark","Murder Makes Scents","A Blink of the Screen: Collected Shorter Fiction","Living Your Dreams: How to make a living doing what you love",
                             "The Bedroom Experiment(Hot Jocks #5.5)","Sweet Soul (Sweet Home, #4; Carillo Boys, #3)","Would Like to Meet","House of Earth and Blood","Ugly Betty: The Book",
                             "The Favorite Daughter","The East End","Jinn'sDominion (Desert Cursed, #3","Pine & Boof: The Lucky Leaf","Beyond Belief: My Secret Life Inside Scientology and My Harrowing Escape",
@@ -42,12 +43,14 @@ class GoodreadsFake:
         if (len(module_data) > 0):
             pd \
                 .DataFrame(module_data) \
-                .to_csv(path_or_buf=file, index=False, mode=write_mode, header=header, quoting=csv.QUOTE_MINIMAL)
+                .to_csv(path_or_buf=file, sep=',',index=False, mode=write_mode, header=header, quoting=csv.QUOTE_MINIMAL, encoding='utf-8')
             self._user_data_list = list()
             self._review_data_list = list()
             self._author_data_list = list()
             self._book_data_list = list()
 
+    def _clean_text(cls, text):
+        return ' '.join((text.replace('\n','')).split())
 
     def _generate_fake_review_obj(self):
         return {
@@ -57,7 +60,7 @@ class GoodreadsFake:
             "user_id" : self._faker.random_int(0, 100000),
             "book_id" : self._faker.random_int(0, 100000),
             "author_id" : self._faker.random_int(0, 100000),
-            "review_text" : self._faker.text(),
+            "review_text" : self._clean_text(self._faker.text()),
             "review_rating" : self._faker.pyfloat(right_digits = 2, min_value =0, max_value = 5),
             "review_votes" : self._faker.random_int(0, 1000000),
             "spoiler_flag" : bool(self._faker.random_int(0, 1)),
@@ -187,6 +190,14 @@ class GoodreadsFake:
 
 
 if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(
+        description="A fake data generator for GoodReads reviews.")
+
+    parser._action_groups.pop()
+    required = parser.add_argument_group('required arguments')
+    required.add_argument("-n", "--num_records", type=int, metavar='', required=True, help="Number of records to genertae.")
+    args = parser.parse_args()
     fk = GoodreadsFake()
-    for i in range(100):
+    for i in range(args.num_records):
         fk.generate()
