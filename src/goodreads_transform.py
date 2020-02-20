@@ -14,8 +14,8 @@ class GoodreadsTransform:
 
     def __init__(self, spark):
         self._spark = spark
-        self._load_path = 's3://' + config.get('BUCKET', 'WORKING_ZONE')
-        self._save_path = 's3://' + config.get('BUCKET', 'PROCESSED_ZONE')
+        self._load_path = 's3a://' + config.get('BUCKET', 'WORKING_ZONE')
+        self._save_path = 's3a://' + config.get('BUCKET', 'PROCESSED_ZONE')
 
 
     def transform_author_dataset(self):

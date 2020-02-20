@@ -24,17 +24,18 @@ class GoodreadsFake:
         self._book_data_list = list()
         self._base_directory = "D:\GoodReadsData\\fake"
 
-    def generate(self):
-        review_obj = self._generate_fake_review_obj()
-        self._review_data_list.append(self._parse_review_data(review_obj))
-        self._user_data_list.append(self._parse_user_data(review_obj))
-        self._author_data_list.append(self._parse_author_data(review_obj))
-        self._book_data_list.append(self._parse_book_data(review_obj))
-
+    def generate(self, num_records):
+        for i in range(num_records):
+            review_obj = self._generate_fake_review_obj()
+            self._review_data_list.append(self._parse_review_data(review_obj))
+            self._user_data_list.append(self._parse_user_data(review_obj))
+            self._author_data_list.append(self._parse_author_data(review_obj))
+            self._book_data_list.append(self._parse_book_data(review_obj))
         for module_name, module_data in zip(["reviews", "user", "author", "book"],
                                             [self._review_data_list, self._user_data_list, self._author_data_list,
                                              self._book_data_list]):
-            self._write_to_disk(module_name, module_data)
+                self._write_to_disk(module_name, module_data)
+                self._clear_modules()
 
     def _write_to_disk(self, module_name, module_data):
         file = os.path.join(self._base_directory, f"{module_name}.csv")
@@ -44,10 +45,13 @@ class GoodreadsFake:
             pd \
                 .DataFrame(module_data) \
                 .to_csv(path_or_buf=file, sep=',',index=False, mode=write_mode, header=header, quoting=csv.QUOTE_MINIMAL, encoding='utf-8')
-            self._user_data_list = list()
-            self._review_data_list = list()
-            self._author_data_list = list()
-            self._book_data_list = list()
+
+
+    def _clear_modules(self):
+        self._user_data_list = list()
+        self._review_data_list = list()
+        self._author_data_list = list()
+        self._book_data_list = list()
 
     def _clean_text(cls, text):
         return ' '.join((text.replace('\n','')).split())
@@ -56,7 +60,7 @@ class GoodreadsFake:
         return {
 
             #Fake review
-            "review_id" : self._faker.random_int(0, 100000),
+            "review_id" : self._faker.random_int(0, 10000000),
             "user_id" : self._faker.random_int(0, 100000),
             "book_id" : self._faker.random_int(0, 100000),
             "author_id" : self._faker.random_int(0, 100000),
@@ -199,5 +203,6 @@ if __name__ == '__main__':
     required.add_argument("-n", "--num_records", type=int, metavar='', required=True, help="Number of records to genertae.")
     args = parser.parse_args()
     fk = GoodreadsFake()
-    for i in range(args.num_records):
-        fk.generate()
+    for i in range(100):
+        print(f"Running iteration : {i}")
+        fk.generate(args.num_records)
