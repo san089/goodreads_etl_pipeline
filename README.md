@@ -77,7 +77,10 @@ You can follow the AWS [ Guide](https://docs.aws.amazon.com/redshift/latest/gsg/
 
 ## How to run 
 Make sure Airflow webserver and scheduler is running. 
-Open the Airflow UI (http://< ec2-instance-ip >:< configured-port >) 
+Open the Airflow UI `http://< ec2-instance-ip >:< configured-port >` 
+
+GoodReads Pipeline DAG
+![Pipeline DAG](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/images/goodreads_dag.PNG)
 
 DAG View:
 ![DAG View](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/images/DAG.PNG)
