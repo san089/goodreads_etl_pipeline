@@ -6,6 +6,7 @@ import logging
 import logging.config
 import configparser
 from warehouse.goodreads_warehouse_driver import GoodReadsWarehouseDriver
+import time
 
 config = configparser.ConfigParser()
 config.read_file(open(f"{Path(__file__).parents[0]}/config.cfg"))
@@ -51,6 +52,8 @@ def main():
         if file in modules.keys():
             modules[file]()
 
+    logging.debug("Waiting before setting up Warehouse")
+    time.sleep(5)
 
     # Starting warehouse functionality
     grwarehouse = GoodReadsWarehouseDriver()
