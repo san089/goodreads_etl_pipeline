@@ -13,8 +13,27 @@ Pipeline Consists of various modules:
 #### Overview
 Data is captured in real time from the goodreads API using the Goodreads Python wrapper (View usage - [Fetch Data Module](https://github.com/san089/goodreads/blob/master/example/fetchdata.py)). The data collected from the goodreads API is stored on local disk and is timely moved to the Landing Bucket on AWS S3. ETL jobs are written in spark and scheduled in airflow to run every 10 minutes.  
 
+### ETL Flow
+
+ - Data Collected from the API is moved to landing zone s3 buckets.
+ - ETL job has s3 module which copies data from landing zone to working zone.
+ - Once the data is moved to working zone, spark job is triggered which reads the data from working zone and apply transformation. Dataset is repartitioned and moved to the Processed Zone.
+ - Warehouse module of ETL jobs picks up data from processed zone and stages it into the Redshift staging tables.
+ - Using the Redshift staging tables and UPSERT operation is performed on the Data Warehouse tables to update the dataset.
+ - ETL job execution is completed once the Data Warehouse is updated. 
+ - Airflow DAG runs the data quality check on all Warehouse tables once the ETL job execution is completed.
+ - Airflow DAG has Analytics queries configured in a Custom Designed Operator. These queries are run and again a Data Quality Check is done on some selected Analytics Table.
+ - Dag execution completes after these Data Quality check.
 
 ## Environment Setup
+
+### Hardware Used
+EMR - I used a 3 node cluster with below Instance Types:
+
+    m5.xlarge
+    4 vCore, 16 GiB memory, EBS only storage
+    EBS Storage:64 GiB
+Redshift: For Redshift I used 2 Node cluster with Instace Types `dc2.large`
 
 ### Setting Up Airflow
 
@@ -72,6 +91,36 @@ DAG Gantt View:
 
 ## Testing the Limits
 The `goodreadsfaker` module in this project generates Fake data which is used to test the ETL pipeline on heavy load.  
+
+ To test the pipeline I used `goodreadsfaker` to generate 11.4 GB of data which is to be processed every 10 minutes (including ETL jobs + populating data into warehouse + running analytical queries) by the pipeline which equates to around 68 GB/hour and about 1.6 TB/day.
+
+Source DataSet Count:
+![Source Dataset Count](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/images/DatasetCount.PNG)
+
+
+DAG Run Results:
+![GoodReads DAG Run](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/images/DAG_tree_view.PNG)
+
+Data Loaded to Warehouse:
+![GoodReads Warehouse Count](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/images/WarehouseCount.PNG)
+
+
+
+## Scenarios
+
+-   Data increase by 100x. read > write. write > read
+    
+    -   Redshift: Analytical database, optimized for aggregation, also good performance for read-heavy workloads
+    -   Increase EMR cluster size to handle bigger volume of data
+
+-   Pipelines would be run on 7am daily. how to update dashboard? would it still work?
+    
+    -   DAG is scheduled to run every 10 minutes and can be configured to run every morning at 7 AM if required. 
+    -   Data quality operators are used at appropriate position. In case of DAG failures email triggers can be configured to let the team know about pipeline failures.
+    
+-   Make it available to 100+ people
+    -   We can set the concurrency limit for your Amazon Redshift cluster. While the concurrency limit is 50 parallel queries for a single period of time, this is on a per cluster basis, meaning you can launch as many clusters as fit for you business.
+ 
 
 
 
