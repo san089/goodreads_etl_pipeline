@@ -26,7 +26,7 @@ Project uses `sshtunnel` to submit spark jobs using a ssh connection from the EC
 
     pip install apache-airflow[sshtunnel]
 
-Finally, copy the dag and plugin folder to EC2 inside airflow home directory. 
+Finally, copy the dag and plugin folder to EC2 inside airflow home directory. Also, checkout [Airflow Connection](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/Airflow_Connections.md) for setting up connection to EMR and Redshift from Airflow.
 
 ### Setting up EMR
 Spinning up EMR cluster is preety straight forward. You can use AWS Guide available [here](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-gs.html).
@@ -54,4 +54,28 @@ Copy the ETL scripts to EMR and we have our EMR ready to run jobs.
 
 ### Setting up Redshift
 You can follow the AWS [ Guide](https://docs.aws.amazon.com/redshift/latest/gsg/rs-gsg-launch-sample-cluster.html) to run a Redshift cluster or alternatively you can use [Redshift_Cluster_IaC.py](https://github.com/san089/Data_Engineering_Projects/blob/master/Redshift_Cluster_IaC.py) Script to create cluster automatically. 
+
+
+## How to run 
+Make sure Airflow webserver and scheduler is running. 
+Open the Airflow UI (http://< ec2-instance-ip >:< configured-port >) 
+
+DAG View:
+![DAG View](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/images/DAG.PNG)
+
+DAG Tree View:
+![DAG Tree](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/images/DAG_tree_view.PNG)
+
+DAG Gantt View: 
+![DAG Gantt View](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/images/DAG_Gantt.PNG)
+
+
+## Testing the Limits
+The `goodreadsfaker` module in this project generates Fake data which is used to test the ETL pipeline on heavy load.  
+
+
+
+
+
+
 
