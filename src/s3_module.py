@@ -36,7 +36,7 @@ class GoodReadsS3Module:
                 self._s3.meta.client.copy({'Bucket': source_bucket, 'Key': key}, target_bucket, key)
 
         # cleanup source bucket
-        self.clean_bucket(source_bucket)
+        #self.clean_bucket(source_bucket)
 
     def get_files(self, bucket_name):
         logging.debug(f"Inspecting bucket : {bucket_name} for files present")
