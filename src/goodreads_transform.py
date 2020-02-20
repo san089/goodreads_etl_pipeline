@@ -35,7 +35,7 @@ class GoodreadsTransform:
 
         logging.debug(f"Attempting to write data to {self._save_path + '/authors/'}")
         deduped_author_df\
-            .coalesce(3)\
+            .repartition(10)\
             .write\
             .csv(path = self._save_path + '/authors/', sep = '|', mode='overwrite', compression='gzip', header=True, timestampFormat = 'yyyy-MM-dd HH:mm:ss.SSS', quote = '"', escape = '"')
 
@@ -65,7 +65,7 @@ class GoodreadsTransform:
 
         logging.debug(f"Attempting to write data to {self._save_path + '/reviews/'}")
         deduped_reviews_df\
-            .coalesce(3)\
+            .repartition(10)\
             .write\
             .csv(path = self._save_path + '/reviews/', sep = '|', mode='overwrite', compression='gzip', header=True, timestampFormat = 'yyyy-MM-dd HH:mm:ss.SSS', quote = '"', escape = '"')
 
@@ -87,14 +87,14 @@ class GoodreadsTransform:
 
         logging.debug(f"Attempting to write data to {self._save_path + '/books/'}")
         deduped_books_df\
-            .coalesce(3)\
+            .repartition(10)\
             .write\
             .csv(path = self._save_path + '/books/', sep = '|', mode='overwrite', compression='gzip', header=True, timestampFormat = 'yyyy-MM-dd HH:mm:ss.SSS', quote = '"', escape = '"')
 
 
     def tranform_users_dataset(self):
         logging.debug("Inside transform users dataset module")
-        users_df = self._spark.read.csv('s3://goodreads-working-zone/user.csv', header=True, mode='PERMISSIVE',
+        users_df = self._spark.read.csv(self._load_path + '/user.csv', header=True, mode='PERMISSIVE',
                                   inferSchema=True, quote="\"", escape="\"")
 
         users_lookup_df = users_df\
@@ -110,6 +110,6 @@ class GoodreadsTransform:
 
         logging.debug(f"Attempting to write data to {self._save_path + '/users/'}")
         deduped_users_df\
-            .coalesce(3)\
+            .repartition(10)\
             .write\
             .csv(path = self._save_path + '/users/', sep = '|', mode='overwrite', compression='gzip', header=True, timestampFormat = 'yyyy-MM-dd HH:mm:ss.SSS', quote = '"', escape = '"')
