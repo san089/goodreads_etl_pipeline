@@ -19,6 +19,13 @@ class GoodReadsS3Module:
         self._processed_zone = config.get('BUCKET','PROCESSED_ZONE')
 
     def s3_move_data(self, source_bucket = None, target_bucket= None):
+        """
+        Detect files in source bucket and move those files to target bucket
+        :param source_bucket: name of source bucket
+        :param target_bucket: name of target bucket
+        """
+
+        # If no argument passed default to the project related landing zone and working zone
         if source_bucket is None:
             source_bucket = self._landing_zone
         if target_bucket is None:
@@ -35,13 +42,24 @@ class GoodReadsS3Module:
                 logging.debug(f"Copying file {key} from {source_bucket} to {target_bucket}")
                 self._s3.meta.client.copy({'Bucket': source_bucket, 'Key': key}, target_bucket, key)
 
-        # cleanup source bucket
+        # cleanup source bucket,
+        # Cleaning bucket part is commented to avoid uploading files to s3 again and again when testing heavy loads on ETL.
+
         #self.clean_bucket(source_bucket)
 
     def get_files(self, bucket_name):
+        """
+        Get all the files present in the provided bucket
+        :param bucket_name: bucket to search
+        :return: keys or files present in the bucket
+        """
         logging.debug(f"Inspecting bucket : {bucket_name} for files present")
         return [bucket_object.key for bucket_object in self._s3.Bucket(bucket_name).objects.all()]
 
     def clean_bucket(self, bucket_name):
+        """
+        Clean the bucket, delete all files
+        :param bucket_name: bucket name, bucket to clean
+        """
         logging.debug(f"Cleaning bucket : {bucket_name}")
         self._s3.Bucket(bucket_name).objects.all().delete()

@@ -3,8 +3,10 @@ from pyspark.sql.functions import udf
 from time import strptime
 from datetime import datetime
 
+# A Simple udf to remove extra spaces from text
 remove_extra_spaces = udf(lambda x: ' '.join(x.split()) , StringType())
 
+# A udf to transform timestamp format
 @udf(TimestampType())
 def stringtodatetime(datestring):
     x = datestring.split()

@@ -11,6 +11,13 @@ config = configparser.ConfigParser()
 config.read_file(open(f"{Path(__file__).parents[0]}/config.cfg"))
 
 class GoodreadsTransform:
+    """
+    This class performs transformation operations on the dataset.
+    1. Transform timestamp format, clean text part, remove extra spaces etc.
+    2. Create a lookup dataframe which contains the id and the timestamp for the latest record.
+    3. Join this lookup data frame with original dataframe to get only the latest records from the dataset.
+    4. Save the dataset by repartitioning. Using gzip compression
+    """
 
     def __init__(self, spark):
         self._spark = spark

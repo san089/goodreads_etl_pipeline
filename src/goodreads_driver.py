@@ -8,6 +8,7 @@ import configparser
 from warehouse.goodreads_warehouse_driver import GoodReadsWarehouseDriver
 import time
 
+# Setting configurations. Look config.cfg for more details
 config = configparser.ConfigParser()
 config.read_file(open(f"{Path(__file__).parents[0]}/config.cfg"))
 
@@ -18,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 def create_sparksession():
+    """
+    Initialize a spark session
+    """
     return SparkSession.builder.master('yarn').appName("goodreads") \
            .config("spark.jars.packages","saurfang:spark-sas7bdat:2.0.0-s_2.11") \
            .config("spark.jars.packages", "org.apache.hadoop:hadoop-aws:2.7.2") \
@@ -25,6 +29,12 @@ def create_sparksession():
 
 
 def main():
+    """
+    This method performs below tasks:
+    1: Check for data in Landing Zone, if new files are present move them to Working Zone
+    2: Transform data present in working zone and save the transformed data to Processed Zone
+    3: Run Data Warehouse functionality by setting up Staging tables, then loading staging tables, performing upsert operations on warehouse.
+    """
     logging.debug("\n\nSetting up Spark Session...")
     spark = create_sparksession()
     grt = GoodreadsTransform(spark)
@@ -66,5 +76,7 @@ def main():
     logging.debug("Performing UPSERT")
     grwarehouse.perform_upsert()
 
+
+# Entry point for the pipeline
 if __name__ == "__main__":
     main()
