@@ -35,7 +35,7 @@ EMR - I used a 3 node cluster with below Instance Types:
     m5.xlarge
     4 vCore, 16 GiB memory, EBS only storage
     EBS Storage:64 GiB
-Redshift: For Redshift I used 2 Node cluster with Instace Types `dc2.large`
+Redshift: For Redshift I used 2 Node cluster with Instance Types `dc2.large`
 
 ### Setting Up Airflow
 
@@ -50,7 +50,7 @@ Project uses `sshtunnel` to submit spark jobs using a ssh connection from the EC
 Finally, copy the dag and plugin folder to EC2 inside airflow home directory. Also, checkout [Airflow Connection](https://github.com/san089/goodreads_etl_pipeline/blob/master/docs/Airflow_Connections.md) for setting up connection to EMR and Redshift from Airflow.
 
 ### Setting up EMR
-Spinning up EMR cluster is preety straight forward. You can use AWS Guide available [here](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-gs.html).
+Spinning up EMR cluster is pretty straight forward. You can use AWS Guide available [here](https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-gs.html).
 
 ETL jobs in the project uses [psycopg2](https://pypi.org/project/psycopg2/) to connect to Redshift cluster to run staging and warehouse queries. 
 To install psycopg2 on EMR:
